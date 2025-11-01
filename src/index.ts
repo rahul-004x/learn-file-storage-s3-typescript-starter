@@ -13,7 +13,7 @@ import {
   handlerVideosRetrieve,
 } from "./api/video-meta";
 import { handlerUploadVideo } from "./api/videos";
-import { handlerUploadThumbnail, handlerGetThumbnail } from "./api/thumbnails";
+import { handlerUploadThumbnail } from "./api/thumbnails";
 import { handlerReset } from "./api/reset";
 import { ensureAssetsDir } from "./api/assets";
 import spa from "./app/index.html";
@@ -49,7 +49,6 @@ Bun.serve({
       POST: withConfig(cfg, handlerUploadThumbnail),
     },
     "/api/thumbnails/:videoId": {
-      GET: withConfig(cfg, handlerGetThumbnail),
       POST: withConfig(cfg, handlerUploadThumbnail),
     },
     "/api/video_upload/:videoId": {

@@ -5,41 +5,9 @@ import type { ApiConfig } from "../config";
 import type { BunRequest } from "bun";
 import { BadRequestError, NotFoundError } from "./errors";
 import { UserForbiddenError } from "./errors";
-
-type Thumbnail = {
-  data: ArrayBuffer;
-  mediaType: string;
-};
-
-type mediaType = Pick<Thumbnail, "mediaType">;
-
-const videoThumbnails: Map<string, Thumbnail> = new Map();
+import path from "path";
 
 const MAX_UPLOAD_SIZE = 10 << 20;
-
-export async function handlerGetThumbnail(cfg: ApiConfig, req: BunRequest) {
-  const { videoId } = req.params as { videoId?: string };
-  if (!videoId) {
-    throw new BadRequestError("Invalid video ID");
-  }
-
-  const video = getVideo(cfg.db, videoId);
-  if (!video) {
-    throw new NotFoundError("Couldn't find video");
-  }
-
-  const thumbnail = videoThumbnails.get(videoId);
-  if (!thumbnail) {
-    throw new NotFoundError("Thumbnail not found");
-  }
-
-  return new Response(thumbnail.data, {
-    headers: {
-      "Content-Type": thumbnail.mediaType,
-      "Cache-Control": "no-store",
-    },
-  });
-}
 
 export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
   const { videoId } = req.params as { videoId?: string };
@@ -58,12 +26,18 @@ export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
     throw new BadRequestError("Thumbnail file missing");
   }
 
-  const MAX_UPLOAD_SIZE = 10 << 20; // 10 MB
   if (file.size > MAX_UPLOAD_SIZE) {
     throw new BadRequestError("Thumbnail size should be at most 10MB");
   }
 
   const arrayBuffer = await file.arrayBuffer();
+  const mediaType = file.type;
+  const extenstion = mediaType.split("/")[1];
+
+  const filePath = path.join(cfg.assetsRoot, `${videoId}.${extenstion}`);
+  const thumbnailURL = `http://localhost:${cfg.port}/${filePath}`;
+
+  await Bun.write(filePath, arrayBuffer);
 
   const video = getVideo(cfg.db, videoId);
   if (!video) {
@@ -74,19 +48,14 @@ export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
     throw new UserForbiddenError("Authorized user has no access to this video");
   }
 
-  videoThumbnails.set(videoId, {
-    data: arrayBuffer,
-    mediaType: file.type,
-  });
-
-  const thumbnailURL = `http://localhost:${cfg.port}/api/thumbnails/${videoId}`;
-
   const updatedVideo = {
     ...video,
     thumbnailURL,
   };
 
   updateVideo(cfg.db, updatedVideo);
+
+  console.log("Thumbnail saved at", filePath);
 
   return respondWithJSON(200, updatedVideo);
 }
