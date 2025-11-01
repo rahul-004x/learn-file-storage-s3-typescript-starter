@@ -50,6 +50,7 @@ Bun.serve({
     },
     "/api/thumbnails/:videoId": {
       GET: withConfig(cfg, handlerGetThumbnail),
+      POST: withConfig(cfg, handlerUploadThumbnail),
     },
     "/api/video_upload/:videoId": {
       POST: withConfig(cfg, handlerUploadVideo),
@@ -65,7 +66,7 @@ Bun.serve({
 
     if (path.startsWith("/assets")) {
       return cacheMiddleware(() =>
-        serveStaticFile(path.replace("/assets/", ""), cfg.assetsRoot)
+        serveStaticFile(path.replace("/assets/", ""), cfg.assetsRoot),
       )(req);
     }
 

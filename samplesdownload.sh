@@ -10,7 +10,8 @@ image_urls=(
     "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/is-bootdev-for-you.pdf"
 )
 
-for url in "${image_urls[@]}"; do
-  file_name=$(basename "$url")
-  curl -sSfL -o "samples/$file_name" "$url"
-done
+for url in "${image_urls[@]}";
+  do
+    file_name=$(basename "$url")
+    curl -sSfL -o "samples/$file_name" "$url"
+  done

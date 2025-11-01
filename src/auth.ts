@@ -53,6 +53,7 @@ export function validateJWT(tokenString: string, tokenSecret: string) {
   return userID;
 }
 
+
 export function getBearerToken(headers: Headers) {
   const authHeader = headers.get("Authorization");
   if (!authHeader) {
