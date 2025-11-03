@@ -3,7 +3,7 @@ import { respondWithJSON } from "./json";
 import { getVideo, updateVideo } from "../db/videos";
 import type { ApiConfig } from "../config";
 import type { BunRequest } from "bun";
-import { BadRequestError, NotFoundError } from "./errors";
+import { BadRequestError } from "./errors";
 import { UserForbiddenError } from "./errors";
 import path from "path";
 
@@ -33,6 +33,10 @@ export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
   const arrayBuffer = await file.arrayBuffer();
   const mediaType = file.type;
   const extenstion = mediaType.split("/")[1];
+
+  if (mediaType !== "image/png" && mediaType !== "image/jpeg") {
+    throw new BadRequestError("Unsupported file type");
+  }
 
   const filePath = path.join(cfg.assetsRoot, `${videoId}.${extenstion}`);
   const thumbnailURL = `http://localhost:${cfg.port}/${filePath}`;
